@@ -1,0 +1,10 @@
+{
+    "liveServer.settings.https": {
+        "enable": true, //set it true to enable the feature.
+        "cert": "C:\\Users\\fe_de\\Documents\\Universidad\\Proyectos\\Realidad Aumentada\\server.crt", //full path of the certificate
+        "key": "C:\\Users\\fe_de\\Documents\\Universidad\\Proyectos\\Realidad Aumentada\\server.key", //full path of the private key
+        "passphrase": "pass"
+    },
+    "liveServer.settings.multiRootWorkspaceName": "museoAR",
+    "liveServer.settings.port": 5500
+}

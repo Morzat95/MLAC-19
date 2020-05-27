@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLAC-19</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    
+    <!-- Font Awesom CSS -->
+    <script src="https://kit.fontawesome.com/ac164959d7.js" crossorigin="anonymous"></script>
+
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    
+    <!-- Tensorflow JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    
+    <!-- Teachable Machine JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
+</head>
+<body>
+    <div class="text-center">
+        <h1>Modelo de Detección de Imágenes</h1>
+        <button type="button" onclick="init()" class="btn btn-primary btn-lg" id="startButton">Start</button>
+    </div>
+    <div id="webcam-container" class="text-center"></div>
+    <div id="label-container" class="text-center"></div>
+    <br>
+    <div id="progress-container" class="text-center">
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" id="conBarbijoProgressBar" role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="100"></div>
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" id="sinBarbijoProgressBar" role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        // More API functions here:
+        // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+
+        // the link to your model provided by Teachable Machine export panel
+        const URL = "Modelo/";                                                      // Local
+        // const URL = "https://teachablemachine.withgoogle.com/models/E8prPpdMr/"; // Online
+
+        let model, webcam, labelContainer, maxPredictions;
+
+        // Load the image model and setup the webcam
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+
+            // load the model and metadata
+            // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+            // or files from your local hard drive
+            // Note: the pose library adds "tmImage" object to your window (window.tmImage)
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+
+            // Convenience function to setup a webcam
+            const flip = true; // whether to flip the webcam
+            webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
+            await webcam.setup(); // request access to the webcam
+            await webcam.play();
+            window.requestAnimationFrame(loop);
+
+            // append elements to the DOM
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            labelContainer = document.getElementById("label-container");
+            for (let i = 0; i < maxPredictions; i++) { // and class labels
+                labelContainer.appendChild(document.createElement("div"));
+            }
+            
+            let check = $('<i id="check" class="fas fa-check fa-8x fa-border" aria-hidden="true"></i>');
+            let cross = $('<i id="cross" class="fas fa-times fa-8x fa-border" aria-hidden="true"></i>');
+            check.hide();cross.hide();
+            labelContainer.appendChild(check[0]);
+            labelContainer.appendChild(cross[0]);
+
+            $('#progress-container').show();
+            $('#startButton').hide();
+        }
+
+        async function loop() {
+            webcam.update(); // update the webcam frame
+            await predict();
+            window.requestAnimationFrame(loop);
+        }
+
+        // run the webcam image through the image model
+        async function predict() {
+            // predict can take in an image, video or canvas html element
+            const prediction = await model.predict(webcam.canvas);
+            for (let i = 0; i < maxPredictions; i++) {
+                const className = prediction[i].className;
+                const probability = prediction[i].probability.toFixed(2);
+                const classPrediction = className + ": " + probability;
+                labelContainer.childNodes[i].innerHTML = classPrediction;
+
+                let progressBarId = prediction[i].className == 'Gente con Barbijo' ? 'conBarbijoProgressBar' : 'sinBarbijoProgressBar';
+                let progressBar = $(`#${progressBarId}`);
+
+                let percentage = probability * 100;
+
+                progressBar.css('width', `${percentage}%`)
+                progressBar.attr('aria-valuenow', percentage);
+                progressBar.text(`${percentage}%`);
+
+                if (className == 'Gente con Barbijo' && probability >= 0.8) {
+                    $('#check').show();
+                    $('#cross').hide();
+                } else if (className == 'Gente sin Barbijo' && probability >= 0.2) {
+                    $('#cross').show();
+                    $('#check').hide();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
