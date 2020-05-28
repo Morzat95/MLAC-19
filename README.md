@@ -1,6 +1,6 @@
 # Machine Learning Anti COVID-19 (MLAC-19)
 
-Proyecto para detectar el uso de barbijos en época de COVID-19.
+Proyecto para detectar el uso de barbijos en época de COVID-19. Visite el [sitio web](https://morzat95.github.io/MLAC-19/) para probarlo en vivo.
 
 Modelo generado gracias a [Teachable Machine](https://teachablemachine.withgoogle.com/).
 
